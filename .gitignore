@@ -1,0 +1,32 @@
+# Local configuration
+local.properties
+
+# Firebase
+google-services.json
+
+# Gradle
+.gradle/
+build/
+app/build/
+
+# Native build
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Android Studio captures
+captures/
+
+# Release keystore
+*.jks
+*.keystore
