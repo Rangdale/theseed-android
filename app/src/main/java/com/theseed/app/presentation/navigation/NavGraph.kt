@@ -5,11 +5,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.theseed.app.presentation.auth.AuthScreen
+import com.theseed.app.presentation.habits.AddEditHabitScreen
+import com.theseed.app.presentation.habits.HabitListScreen
 import com.theseed.app.presentation.home.HomeScreen
 
 object Routes {
     const val AUTH = "auth"
     const val HOME = "home"
+
+    const val ADD_HABIT = "add_habit"
 }
 
 @Composable
@@ -31,8 +35,14 @@ fun NavGraph(startDestination: String = Routes.AUTH) {
         }
 
         composable(Routes.HOME) {
-            // HomeScreen comes in Phase 4
-            HomeScreen()
+            HabitListScreen(onAddHabit = { navController.navigate(Routes.ADD_HABIT) })
+        }
+
+        composable(Routes.ADD_HABIT) {
+            AddEditHabitScreen(
+                onSaved = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
+            )
         }
     }
 }

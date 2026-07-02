@@ -12,7 +12,8 @@ private val TheSeedColorScheme = lightColorScheme(
     onPrimary = SurfaceWhite,
     onBackground = CharcoalText,
     onSurface = CharcoalText,
-    outline = BorderGray
+    outline = BorderGray,
+    error = Color(0xFFEC5E5E)
 )
 
 @Composable

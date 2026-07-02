@@ -31,6 +31,10 @@ class AuthViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             authRepository.signInWithEmail(email, password)
                 .onSuccess {
+                    viewModelScope.launch {
+                        val token = authRepository.getIdToken()
+                        Log.d("FIREBASE_TOKEN", token ?: "Token is null")
+                    }
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isAuthenticated = true
@@ -50,6 +54,10 @@ class AuthViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             authRepository.signUpWithEmail(email, password)
                 .onSuccess {
+                    viewModelScope.launch {
+                        val token = authRepository.getIdToken()
+                        Log.d("FIREBASE_TOKEN", token ?: "Token is null")
+                    }
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isAuthenticated = true
@@ -69,6 +77,10 @@ class AuthViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             authRepository.signInWithGoogle(idToken)
                 .onSuccess {
+                    viewModelScope.launch {
+                        val token = authRepository.getIdToken()
+                        Log.d("FIREBASE_TOKEN", token ?: "Token is null")
+                    }
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         isAuthenticated = true
@@ -94,6 +106,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val token = authRepository.getIdToken()
+                Log.d("FIREBASE_TOKEN", token ?: "Token is null")
                 Log.d("AuthTest", "Token retrieved: ${token?.take(20)}...")
 
                 if (token == null) {

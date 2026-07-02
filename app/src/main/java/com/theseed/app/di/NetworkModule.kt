@@ -1,6 +1,7 @@
 package com.theseed.app.di
 
 import com.theseed.app.data.remote.AuthApi
+import com.theseed.app.data.remote.HabitApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,4 +25,9 @@ object NetworkModule {
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi =
         retrofit.create(AuthApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideHabitApi(retrofit: Retrofit): HabitApi =
+        retrofit.create(HabitApi::class.java)
 }

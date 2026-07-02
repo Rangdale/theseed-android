@@ -74,6 +74,7 @@ dependencies {
     // Hilt
     implementation(libs.hilt.android)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.ui.text)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
