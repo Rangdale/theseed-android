@@ -45,7 +45,10 @@ fun HabitListScreen(
     val state by viewModel.listState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        viewModel.loadHabits()
+        // Only load if list is empty — avoids redundant fetches
+        if (state.habits.isEmpty()) {
+            viewModel.loadHabits()
+        }
     }
 
     Scaffold(
@@ -157,6 +160,8 @@ fun HabitListScreen(
                         items(habitsInCategory) { habit ->
                             HabitCard(
                                 habit = habit,
+                                isCompleted = habit.id in state.completedHabitIds, // ← from real state
+                                onToggleComplete = { viewModel.toggleCompletion(habit.id) },
                                 onDelete = {
                                     viewModel.deleteHabit(habit.id)
                                 }
@@ -173,6 +178,8 @@ fun HabitListScreen(
 @Composable
 fun HabitCard(
     habit: Habit,
+    isCompleted: Boolean,       // ← driven by real backend state now
+    onToggleComplete: () -> Unit,
     onDelete: () -> Unit
 ) {
     var completed by remember {

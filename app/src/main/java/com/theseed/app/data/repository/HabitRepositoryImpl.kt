@@ -97,4 +97,37 @@ class HabitRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun toggleCompletion(habitId: String): Result<HabitCompletion> {
+        return try {
+            val response = habitApi.toggleCompletion(bearerToken(), habitId)
+            Result.success(
+                HabitCompletion(
+                    habitId = habitId,
+                    completed = response.completed,
+                    completionDate = response.completionDate
+                )
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getTodayCompletions(): Result<Set<String>> {
+        return try {
+            val response = habitApi.getTodayCompletions(bearerToken())
+            Result.success(response.completedHabitIds.toSet())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getHabitStreak(habitId: String): Result<Int> {
+        return try {
+            val response = habitApi.getHabitStreak(bearerToken(), habitId)
+            Result.success(response.streak)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

@@ -10,6 +10,12 @@ interface HabitApi {
         @Body request: CreateHabitRequest
     ): HabitResponse
 
+    @POST("completions/{habitId}/toggle")
+    suspend fun toggleCompletion(
+        @Header("Authorization") token: String,
+        @Path("habitId") habitId: String
+    ): ToggleCompletionResponse
+
     @GET("habits")
     suspend fun getHabits(
         @Header("Authorization") token: String
@@ -20,6 +26,17 @@ interface HabitApi {
         @Header("Authorization") token: String,
         @Path("id") id: String
     ): HabitResponse
+
+    @GET("completions/today")
+    suspend fun getTodayCompletions(
+        @Header("Authorization") token: String
+    ): TodayStatusResponse
+
+    @GET("completions/{habitId}/streak")
+    suspend fun getHabitStreak(
+        @Header("Authorization") token: String,
+        @Path("habitId") habitId: String
+    ): StreakResponse
 
     @PUT("habits/{id}")
     suspend fun updateHabit(

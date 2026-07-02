@@ -31,3 +31,17 @@ data class UpdateHabitRequest(
     val frequency: String? = null,
     @SerializedName("reminder_time") val reminderTime: String? = null
 )
+
+data class ToggleCompletionResponse(
+    val completed: Boolean,
+    @SerializedName("completion_date") val completionDate: String
+)
+
+data class TodayStatusResponse(
+    @SerializedName("completed_habit_ids") val completedHabitIds: List<String>
+)
+
+data class StreakResponse(
+    @SerializedName("habit_id") val habitId: String,
+    val streak: Int
+)

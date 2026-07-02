@@ -13,6 +13,7 @@ import javax.inject.Inject
 data class HabitListUiState(
     val isLoading: Boolean = false,
     val habits: List<Habit> = emptyList(),
+    val completedHabitIds: Set<String> = emptySet(),
     val error: String? = null
 )
 
@@ -27,7 +28,9 @@ class HabitViewModel @Inject constructor(
     private val getHabitsUseCase: GetHabitsUseCase,
     private val createHabitUseCase: CreateHabitUseCase,
     private val updateHabitUseCase: UpdateHabitUseCase,
-    private val deleteHabitUseCase: DeleteHabitUseCase
+    private val deleteHabitUseCase: DeleteHabitUseCase,
+    private val toggleCompletionUseCase: ToggleCompletionUseCase,
+    private val getTodayCompletionsUseCase: GetTodayCompletionsUseCase
 ) : ViewModel() {
 
     private val _listState = MutableStateFlow(HabitListUiState())
@@ -43,12 +46,45 @@ class HabitViewModel @Inject constructor(
     fun loadHabits() {
         viewModelScope.launch {
             _listState.value = _listState.value.copy(isLoading = true, error = null)
-            getHabitsUseCase()
-                .onSuccess { habits ->
-                    _listState.value = HabitListUiState(habits = habits)
-                }
-                .onFailure { e ->
-                    _listState.value = _listState.value.copy(isLoading = false, error = e.message)
+
+            // Run both sequentially — habits first, then completions
+            val habitsResult = getHabitsUseCase()
+
+            val habits = habitsResult.getOrElse {
+                _listState.value = _listState.value.copy(
+                    isLoading = false,
+                    error = it.message
+                )
+                return@launch
+            }
+
+            val completedIds = getTodayCompletionsUseCase()
+                .getOrElse { emptySet() }
+
+            _listState.value = HabitListUiState(
+                habits = habits,
+                completedHabitIds = completedIds
+            )
+        }
+    }
+
+    fun toggleCompletion(habitId: String) {
+        viewModelScope.launch {
+            // Optimistic update — respond instantly before API call
+            val currentCompleted = _listState.value.completedHabitIds
+            val newCompleted = if (habitId in currentCompleted) {
+                currentCompleted - habitId
+            } else {
+                currentCompleted + habitId
+            }
+            _listState.value = _listState.value.copy(completedHabitIds = newCompleted)
+
+            // Confirm with backend — revert if it fails
+            toggleCompletionUseCase(habitId)
+                .onFailure {
+                    _listState.value = _listState.value.copy(
+                        completedHabitIds = currentCompleted
+                    )
                 }
         }
     }
@@ -65,7 +101,7 @@ class HabitViewModel @Inject constructor(
             createHabitUseCase(title, category, difficulty, frequency, reminderTime)
                 .onSuccess {
                     _createState.value = CreateHabitUiState(saveSuccess = true)
-                    loadHabits() // refresh list after creating
+                    loadHabits()
                 }
                 .onFailure { e ->
                     _createState.value = CreateHabitUiState(error = e.message)
