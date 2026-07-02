@@ -1,6 +1,7 @@
 package com.theseed.app.presentation.habits
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -160,11 +161,10 @@ fun HabitListScreen(
                         items(habitsInCategory) { habit ->
                             HabitCard(
                                 habit = habit,
-                                isCompleted = habit.id in state.completedHabitIds, // ← from real state
+                                isCompleted = habit.id in state.completedHabitIds,
+                                streak = state.streaks[habit.id] ?: 0, // ← pass real streak
                                 onToggleComplete = { viewModel.toggleCompletion(habit.id) },
-                                onDelete = {
-                                    viewModel.deleteHabit(habit.id)
-                                }
+                                onDelete = { viewModel.deleteHabit(habit.id) }
                             )
                         }
                     }
@@ -179,12 +179,11 @@ fun HabitListScreen(
 fun HabitCard(
     habit: Habit,
     isCompleted: Boolean,       // ← driven by real backend state now
+    streak: Int,
     onToggleComplete: () -> Unit,
     onDelete: () -> Unit
 ) {
-    var completed by remember {
-        mutableStateOf(false)
-    }
+
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
 
@@ -274,29 +273,30 @@ fun HabitCard(
                             Spacer(modifier = Modifier.width(4.dp))
 
                             Text(
-                                text = "12 Day Streak",
+                                text = if (streak > 0) "$streak Day Streak" else "No streak yet",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = .75f)
                             )
                         }
                     }
                 }
-                IconButton(
-                    onClick = {
-                        completed = !completed
-                    },
+                Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(24.dp)
+                        .clip(CircleShape)
                         .background(
-                            color = if (completed) ForestGreen else MaterialTheme.colorScheme.surface,
-                            shape = CircleShape
+                            if (isCompleted) ForestGreen
+                            else MaterialTheme.colorScheme.surface
                         )
+                        .clickable { onToggleComplete() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
-                        tint = if (completed) SurfaceWhite else MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(12.dp),
+                        tint = if (isCompleted) SurfaceWhite
+                        else MaterialTheme.colorScheme.outline
                     )
                 }
             }

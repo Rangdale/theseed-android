@@ -34,11 +34,11 @@ data class UpdateHabitRequest(
 
 data class ToggleCompletionResponse(
     val completed: Boolean,
-    @SerializedName("completion_date") val completionDate: String
+    val completionDate: String?  // ← matches camelCase from backend, no annotation needed
 )
 
 data class TodayStatusResponse(
-    @SerializedName("completed_habit_ids") val completedHabitIds: List<String>
+    val completedHabitIds: List<String>
 )
 
 data class StreakResponse(

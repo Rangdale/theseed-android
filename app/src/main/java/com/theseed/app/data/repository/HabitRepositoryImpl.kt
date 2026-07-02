@@ -17,8 +17,8 @@ class HabitRepositoryImpl @Inject constructor(
 
     private suspend fun bearerToken(): String {
         val token = authRepository.getIdToken()
-            ?: throw IllegalStateException("No authenticated user")
-        return "Bearer $token"
+        android.util.Log.d("TokenDebug", "Token retrieved: ${token?.take(10)}...")
+        return if (token != null) "Bearer $token" else throw IllegalStateException("No authenticated user")
     }
 
     override suspend fun createHabit(
@@ -105,7 +105,7 @@ class HabitRepositoryImpl @Inject constructor(
                 HabitCompletion(
                     habitId = habitId,
                     completed = response.completed,
-                    completionDate = response.completionDate
+                    completionDate = response.completionDate ?: ""  // ← safe fallback
                 )
             )
         } catch (e: Exception) {

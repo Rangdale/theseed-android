@@ -1,6 +1,7 @@
 package com.theseed.app
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Text
@@ -26,6 +27,11 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent {
+            FirebaseAuth.getInstance().currentUser
+                ?.getIdToken(true)
+                ?.addOnSuccessListener {
+                    Log.d("FIREBASE_TOKEN", it.token ?: "")
+                }
             TheSeedTheme {
                 var showSplash by rememberSaveable { mutableStateOf(true) }
                 var startDestination by rememberSaveable { mutableStateOf<String?>(null) }

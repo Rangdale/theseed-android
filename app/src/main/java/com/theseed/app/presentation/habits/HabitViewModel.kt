@@ -3,6 +3,7 @@ package com.theseed.app.presentation.habits
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.theseed.app.domain.model.*
+import com.theseed.app.domain.repository.HabitRepository
 import com.theseed.app.domain.usecase.habit.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,7 @@ data class HabitListUiState(
     val isLoading: Boolean = false,
     val habits: List<Habit> = emptyList(),
     val completedHabitIds: Set<String> = emptySet(),
+    val streaks: Map<String, Int> = emptyMap(),
     val error: String? = null
 )
 
@@ -25,6 +27,7 @@ data class CreateHabitUiState(
 
 @HiltViewModel
 class HabitViewModel @Inject constructor(
+    private val habitRepository: HabitRepository,
     private val getHabitsUseCase: GetHabitsUseCase,
     private val createHabitUseCase: CreateHabitUseCase,
     private val updateHabitUseCase: UpdateHabitUseCase,
@@ -47,10 +50,7 @@ class HabitViewModel @Inject constructor(
         viewModelScope.launch {
             _listState.value = _listState.value.copy(isLoading = true, error = null)
 
-            // Run both sequentially — habits first, then completions
-            val habitsResult = getHabitsUseCase()
-
-            val habits = habitsResult.getOrElse {
+            val habits = getHabitsUseCase().getOrElse {
                 _listState.value = _listState.value.copy(
                     isLoading = false,
                     error = it.message
@@ -61,16 +61,24 @@ class HabitViewModel @Inject constructor(
             val completedIds = getTodayCompletionsUseCase()
                 .getOrElse { emptySet() }
 
+            // Fetch streak for each habit
+            val streaks = mutableMapOf<String, Int>()
+            habits.forEach { habit ->
+                habitRepository.getHabitStreak(habit.id)
+                    .onSuccess { streak -> streaks[habit.id] = streak }
+                    .onFailure { streaks[habit.id] = 0 }
+            }
+
             _listState.value = HabitListUiState(
                 habits = habits,
-                completedHabitIds = completedIds
+                completedHabitIds = completedIds,
+                streaks = streaks
             )
         }
     }
 
     fun toggleCompletion(habitId: String) {
         viewModelScope.launch {
-            // Optimistic update — respond instantly before API call
             val currentCompleted = _listState.value.completedHabitIds
             val newCompleted = if (habitId in currentCompleted) {
                 currentCompleted - habitId
@@ -79,12 +87,15 @@ class HabitViewModel @Inject constructor(
             }
             _listState.value = _listState.value.copy(completedHabitIds = newCompleted)
 
-            // Confirm with backend — revert if it fails
+            android.util.Log.d("CompletionDebug", "Toggling habit: $habitId")
+
             toggleCompletionUseCase(habitId)
+                .onSuccess {
+                    android.util.Log.d("CompletionDebug", "Toggle success: completed=${it.completed}")
+                }
                 .onFailure {
-                    _listState.value = _listState.value.copy(
-                        completedHabitIds = currentCompleted
-                    )
+                    android.util.Log.e("CompletionDebug", "Toggle failed: ${it.message}", it)
+                    _listState.value = _listState.value.copy(completedHabitIds = currentCompleted)
                 }
         }
     }
