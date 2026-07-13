@@ -17,8 +17,8 @@ class HabitRepositoryImpl @Inject constructor(
 
     private suspend fun bearerToken(): String {
         val token = authRepository.getIdToken()
-        android.util.Log.d("TokenDebug", "Token retrieved: ${token?.take(10)}...")
-        return if (token != null) "Bearer $token" else throw IllegalStateException("No authenticated user")
+            ?: throw IllegalStateException("No authenticated user")
+        return "Bearer $token"
     }
 
     override suspend fun createHabit(
@@ -26,7 +26,8 @@ class HabitRepositoryImpl @Inject constructor(
         category: HabitCategory,
         difficulty: HabitDifficulty,
         frequency: HabitFrequency,
-        reminderTime: String?
+        reminderTime: String?,
+        durationMinutes: Int?
     ): Result<Habit> {
         return try {
             val response = habitApi.createHabit(
@@ -36,7 +37,8 @@ class HabitRepositoryImpl @Inject constructor(
                     category = category.toApiString(),
                     difficulty = difficulty.toApiString(),
                     frequency = frequency.toApiString(),
-                    reminderTime = reminderTime
+                    reminderTime = reminderTime,
+                    durationMinutes = durationMinutes
                 )
             )
             Result.success(response.habit.toDomain())
@@ -69,7 +71,8 @@ class HabitRepositoryImpl @Inject constructor(
         category: HabitCategory?,
         difficulty: HabitDifficulty?,
         frequency: HabitFrequency?,
-        reminderTime: String?
+        reminderTime: String?,
+        durationMinutes: Int?
     ): Result<Habit> {
         return try {
             val response = habitApi.updateHabit(
@@ -80,7 +83,8 @@ class HabitRepositoryImpl @Inject constructor(
                     category = category?.toApiString(),
                     difficulty = difficulty?.toApiString(),
                     frequency = frequency?.toApiString(),
-                    reminderTime = reminderTime
+                    reminderTime = reminderTime,
+                    durationMinutes = durationMinutes
                 )
             )
             Result.success(response.habit.toDomain())

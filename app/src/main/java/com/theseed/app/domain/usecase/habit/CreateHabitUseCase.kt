@@ -15,12 +15,13 @@ class CreateHabitUseCase @Inject constructor(
         category: HabitCategory,
         difficulty: HabitDifficulty,
         frequency: HabitFrequency,
-        reminderTime: String?
+        reminderTime: String?,
+        durationMinutes: Int?
     ): Result<Habit> {
         // Domain-level validation — same rule as backend, checked early on client too
         if (title.isBlank()) {
             return Result.failure(IllegalArgumentException("Habit title cannot be empty"))
         }
-        return repository.createHabit(title.trim(), category, difficulty, frequency, reminderTime)
+        return repository.createHabit(title.trim(), category, difficulty, frequency, reminderTime, durationMinutes)
     }
 }

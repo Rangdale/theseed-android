@@ -11,9 +11,9 @@ fun HabitDto.toDomain(): Habit {
         difficulty = HabitDifficulty.valueOf(difficulty.uppercase()),
         frequency = HabitFrequency.valueOf(frequency.uppercase()),
         reminderTime = reminderTime?.let {
-            // backend sends "HH:mm:ss" — parse just hours/minutes
             java.time.LocalTime.parse(it.substring(0, 5))
         },
+        durationMinutes = durationMinutes,
         isActive = isActive,
         createdAt = createdAt
     )

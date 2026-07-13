@@ -11,7 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Swipe
 import androidx.compose.material3.*
@@ -32,15 +32,17 @@ import com.theseed.app.domain.model.Habit
 import com.theseed.app.presentation.theme.BackgroundOffWhite
 import com.theseed.app.presentation.theme.ForestGreen
 import com.theseed.app.presentation.theme.SurfaceWhite
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.sp
-
-
+import com.theseed.app.domain.model.displayName
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.ui.graphics.Color
+import com.theseed.app.presentation.theme.color
 
 @Composable
 fun HabitListScreen(
     onAddHabit: () -> Unit,
+    onEditHabit: (String) -> Unit,
     viewModel: HabitViewModel = hiltViewModel()
 ) {
     val state by viewModel.listState.collectAsStateWithLifecycle()
@@ -87,8 +89,10 @@ fun HabitListScreen(
                         .padding(padding),
 
                     contentPadding = PaddingValues(
-                        horizontal = 16.dp,
-                        vertical = 24.dp
+                        start = 20.dp,
+                        end = 20.dp,
+                        top = 0.dp,
+                        bottom = 32.dp
                     ),
 
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -100,8 +104,8 @@ fun HabitListScreen(
 
                         Text(
                             text = "Today's Focus",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
 
@@ -148,8 +152,7 @@ fun HabitListScreen(
                         item {
 
                             Text(
-                                text = category.name.lowercase()
-                                    .replaceFirstChar { it.uppercase() },
+                                text = category.displayName(),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = ForestGreen,
                                 fontWeight = FontWeight.SemiBold
@@ -162,9 +165,10 @@ fun HabitListScreen(
                             HabitCard(
                                 habit = habit,
                                 isCompleted = habit.id in state.completedHabitIds,
-                                streak = state.streaks[habit.id] ?: 0, // ← pass real streak
+                                streak = state.streaks[habit.id] ?: 0,
                                 onToggleComplete = { viewModel.toggleCompletion(habit.id) },
-                                onDelete = { viewModel.deleteHabit(habit.id) }
+                                onDelete = { viewModel.deleteHabit(habit.id) },
+                                onEdit = { onEditHabit(habit.id) }  // ← add this
                             )
                         }
                     }
@@ -178,34 +182,28 @@ fun HabitListScreen(
 @Composable
 fun HabitCard(
     habit: Habit,
-    isCompleted: Boolean,       // ← driven by real backend state now
+    isCompleted: Boolean,
     streak: Int,
     onToggleComplete: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
 
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { value ->
-
             if (value == SwipeToDismissBoxValue.EndToStart) {
                 onDelete()
                 true
-            } else {
-                false
-            }
+            } else false
         }
     )
 
     SwipeToDismissBox(
-
         state = dismissState,
-
         enableDismissFromStartToEnd = false,
-
         enableDismissFromEndToStart = true,
-
         backgroundContent = {
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -213,7 +211,6 @@ fun HabitCard(
                     .background(MaterialTheme.colorScheme.error),
                 contentAlignment = Alignment.CenterEnd
             ) {
-
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = null,
@@ -224,7 +221,6 @@ fun HabitCard(
                 )
             }
         }
-
     ) {
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -232,72 +228,136 @@ fun HabitCard(
             shape = RoundedCornerShape(16.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        top = 16.dp,
+                        bottom = 16.dp,
+                        end = 12.dp
+                    ),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Column {
-                        Text(
-                            text = habit.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                // Left — habit info
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = habit.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AssistChip(
+                            onClick = {},
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = Color.Transparent,
+                                labelColor = habit.difficulty.color()
+                            ),
+                            label = {
+                                Text(
+                                    habit.difficulty.name
+                                        .lowercase()
+                                        .replaceFirstChar { it.uppercase() }
+                                )
+                            }
                         )
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                        Icon(
+                            imageVector = Icons.Default.LocalFireDepartment,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = ForestGreen
+                        )
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        Text(
+                            text = if (streak > 0) "$streak Day Streak" else "No streak yet",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .75f)
+                        )
+                    }
+                }
+
+                // Right — complete button + 3-dot menu
+                Row(verticalAlignment = Alignment.CenterVertically) {
+
+                    // Completion toggle
+                    // Completion toggle
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isCompleted) ForestGreen
+                                else MaterialTheme.colorScheme.surface
+                            )
+                            .clickable { onToggleComplete() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = if (isCompleted) SurfaceWhite
+                            else MaterialTheme.colorScheme.outline
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(2.dp))
+
+                    // 3-dot menu
+                    Box {
+                        Box(
+                            modifier = Modifier
+                                .size(26.dp)
+                                .clickable { menuExpanded = true },
+                            contentAlignment = Alignment.Center
                         ) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More options",
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
 
-                            AssistChip(
-                                onClick = {},
-                                label = {
-                                    Text(
-                                        habit.difficulty.name
-                                            .lowercase()
-                                            .replaceFirstChar { it.uppercase() }
-                                    )
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                            containerColor = MaterialTheme.colorScheme.surface,
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Edit") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Edit, contentDescription = null)
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onEdit()
                                 }
                             )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Icon(
-                                imageVector = Icons.Default.LocalFireDepartment,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = ForestGreen
-                            )
-
-                            Spacer(modifier = Modifier.width(4.dp))
-
-                            Text(
-                                text = if (streak > 0) "$streak Day Streak" else "No streak yet",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = .75f)
+                            DropdownMenuItem(
+                                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onDelete()
+                                }
                             )
                         }
                     }
-                }
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isCompleted) ForestGreen
-                            else MaterialTheme.colorScheme.surface
-                        )
-                        .clickable { onToggleComplete() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = if (isCompleted) SurfaceWhite
-                        else MaterialTheme.colorScheme.outline
-                    )
                 }
             }
         }

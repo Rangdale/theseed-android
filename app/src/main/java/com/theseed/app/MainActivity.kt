@@ -4,14 +4,10 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.google.firebase.auth.FirebaseAuth
 import com.theseed.app.presentation.navigation.NavGraph
 import com.theseed.app.presentation.navigation.Routes
@@ -29,8 +25,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             FirebaseAuth.getInstance().currentUser
                 ?.getIdToken(true)
-                ?.addOnSuccessListener {
-                    Log.d("FIREBASE_TOKEN", it.token ?: "")
+                ?.addOnSuccessListener { result ->
+                    Log.d("FIREBASE_TOKEN", result.token ?: "No token")
+                }
+                ?.addOnFailureListener {
+                    Log.e("FIREBASE_TOKEN", "Failed to get token", it)
                 }
             TheSeedTheme {
                 var showSplash by rememberSaveable { mutableStateOf(true) }
@@ -51,21 +50,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TheSeedTheme {
-        Greeting("Android")
     }
 }

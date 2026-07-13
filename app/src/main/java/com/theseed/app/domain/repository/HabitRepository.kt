@@ -12,7 +12,8 @@ interface HabitRepository {
         category: HabitCategory,
         difficulty: HabitDifficulty,
         frequency: HabitFrequency,
-        reminderTime: String?
+        reminderTime: String?,
+        durationMinutes: Int?
     ): Result<Habit>
 
     suspend fun getHabits(): Result<List<Habit>>
@@ -25,7 +26,8 @@ interface HabitRepository {
         category: HabitCategory?,
         difficulty: HabitDifficulty?,
         frequency: HabitFrequency?,
-        reminderTime: String?
+        reminderTime: String?,
+        durationMinutes: Int?
     ): Result<Habit>
 
     suspend fun deleteHabit(id: String): Result<Unit>

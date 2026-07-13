@@ -87,14 +87,8 @@ class HabitViewModel @Inject constructor(
             }
             _listState.value = _listState.value.copy(completedHabitIds = newCompleted)
 
-            android.util.Log.d("CompletionDebug", "Toggling habit: $habitId")
-
             toggleCompletionUseCase(habitId)
-                .onSuccess {
-                    android.util.Log.d("CompletionDebug", "Toggle success: completed=${it.completed}")
-                }
                 .onFailure {
-                    android.util.Log.e("CompletionDebug", "Toggle failed: ${it.message}", it)
                     _listState.value = _listState.value.copy(completedHabitIds = currentCompleted)
                 }
         }
@@ -105,11 +99,42 @@ class HabitViewModel @Inject constructor(
         category: HabitCategory,
         difficulty: HabitDifficulty,
         frequency: HabitFrequency,
-        reminderTime: String?
+        reminderTime: String?,
+        durationMinutes: Int?
     ) {
         viewModelScope.launch {
             _createState.value = CreateHabitUiState(isSaving = true)
-            createHabitUseCase(title, category, difficulty, frequency, reminderTime)
+            createHabitUseCase(title, category, difficulty, frequency, reminderTime, durationMinutes)
+                .onSuccess {
+                    _createState.value = CreateHabitUiState(saveSuccess = true)
+                    loadHabits()
+                }
+                .onFailure { e ->
+                    _createState.value = CreateHabitUiState(error = e.message)
+                }
+        }
+    }
+
+    fun updateHabit(
+        id: String,
+        title: String,
+        category: HabitCategory,
+        difficulty: HabitDifficulty,
+        frequency: HabitFrequency,
+        reminderTime: String?,
+        durationMinutes: Int?
+    ) {
+        viewModelScope.launch {
+            _createState.value = CreateHabitUiState(isSaving = true)
+            updateHabitUseCase(
+                id = id,
+                title = title,
+                category = category,
+                difficulty = difficulty,
+                frequency = frequency,
+                reminderTime = reminderTime,
+                durationMinutes = durationMinutes
+            )
                 .onSuccess {
                     _createState.value = CreateHabitUiState(saveSuccess = true)
                     loadHabits()

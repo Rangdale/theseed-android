@@ -10,7 +10,8 @@ data class HabitDto(
     val frequency: String,
     @SerializedName("reminder_time") val reminderTime: String?,
     @SerializedName("is_active") val isActive: Boolean,
-    @SerializedName("created_at") val createdAt: String
+    @SerializedName("created_at") val createdAt: String,
+    val durationMinutes: Int?
 )
 
 data class HabitsResponse(val habits: List<HabitDto>)
@@ -21,7 +22,8 @@ data class CreateHabitRequest(
     val category: String,
     val difficulty: String,
     val frequency: String,
-    @SerializedName("reminder_time") val reminderTime: String?
+    @SerializedName("reminder_time") val reminderTime: String?,
+    @SerializedName("duration_minutes") val durationMinutes: Int?
 )
 
 data class UpdateHabitRequest(
@@ -29,7 +31,8 @@ data class UpdateHabitRequest(
     val category: String? = null,
     val difficulty: String? = null,
     val frequency: String? = null,
-    @SerializedName("reminder_time") val reminderTime: String? = null
+    @SerializedName("reminder_time") val reminderTime: String? = null,
+    @SerializedName("duration_minutes") val durationMinutes: Int? = null
 )
 
 data class ToggleCompletionResponse(

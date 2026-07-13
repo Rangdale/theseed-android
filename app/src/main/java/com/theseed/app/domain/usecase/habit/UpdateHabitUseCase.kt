@@ -16,8 +16,9 @@ class UpdateHabitUseCase @Inject constructor(
         category: HabitCategory? = null,
         difficulty: HabitDifficulty? = null,
         frequency: HabitFrequency? = null,
-        reminderTime: String? = null
+        reminderTime: String? = null,
+        durationMinutes: Int? = null
     ): Result<Habit> {
-        return repository.updateHabit(id, title, category, difficulty, frequency, reminderTime)
+        return repository.updateHabit(id, title, category, difficulty, frequency, reminderTime, durationMinutes)
     }
 }

@@ -11,6 +11,10 @@ val SurfaceWhite = Color(0xFFFFFFFF)
 val CharcoalText = Color(0xFF1A1C1A)
 
 val BorderGray = Color(0xFFD8DBD6)
+
+val DarkForestGreen = Color(0xFF4B8A4B)
+
+val InsightGreen = Color(0xFFE7F4DD)
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
